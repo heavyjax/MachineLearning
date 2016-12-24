@@ -1,0 +1,24 @@
+import sqlite3
+import pandas as pd
+import math
+
+conn = sqlite3.connect('/Users/heavyjax/GoogleDrive/MachineLearning/Dataquest/GuidedProjectWorkingWithSQLiteDatabase/factbook.db')
+query = 'SELECT * FROM FACTS'
+FACTS = pd.read_sql_query(sql=query, con=conn)
+facts_without_missings = FACTS.dropna(axis=0)
+pd.options.mode.chained_assignment = None #Turn off warning about chained_assignment
+
+def projected_population_func(row):
+    population = row['population']
+    population_growth = row['population_growth']
+    population_growth = population_growth / 100
+    years_for = 35
+    projected_population = math.pow((population * math.e), (population_growth * years_for))
+    return projected_population
+
+facts_without_missings['projected_population'] = facts_without_missings.apply(projected_population_func, axis = 1)
+facts_without_missings.sort_values('projected_population', inplace=True, ascending=False)
+facts_without_missings = facts_without_missings.reset_index(drop = True)
+
+#Print top-10 countries with giant growth population in 2050
+print(facts_without_missings['name'].loc[0:10])
